@@ -24,13 +24,21 @@ An advanced AI-powered research assistant that uses **multi-agent architectures*
 
 graph TD
     A[Start: User Input] --> B{Input Classifier}
+    
     B -->|Text| C[Controller Agent]
+    
     B -->|Voice| D[Transcriber Agent (Whisper)]
+    
     B -->|Image| E[Image Parser Agent]
+    
     C --> F[Search Agent (ArxivTool)]
+    
     F --> G[RAG Agent (Vector Search)]
+    
     G --> H[Summarizer Agent]
+    
     H --> I[Aggregator / Ranker Agent]
+    
     I --> J[Final Response Generator]
 
 ##🔌 MCP Usage
