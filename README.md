@@ -21,7 +21,7 @@ An advanced AI-powered research assistant that uses **multi-agent architectures*
 
 ### 🕸️ LangGraph Multi-Agent Flow
 
-```mermaid
+
 graph TD
     A[Start: User Input] --> B{Input Classifier}
     B -->|Text| C[Controller Agent]
