@@ -54,6 +54,7 @@ Each agent reads/writes to a shared context object defined by the Multi-Context 
 🔧 Local Setup
 # Clone repo
 git clone https://github.com/sahana-github/Multi-Agent-Research-Assistant
+
 cd multiagent-research-bot
 
 # Install dependencies
@@ -68,6 +69,7 @@ streamlit run frontend/app.py
 🐳 Docker (CI/CD Ready)
 
 docker build -t research-bot .
+
 docker run -p 8000:8000 research-bot
 
 CI/CD Workflow
