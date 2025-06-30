@@ -1,0 +1,9 @@
+langchain
+langgraph
+chromadb
+fastapi
+uvicorn
+tiktoken
+pypdf
+streamlit
+requests
