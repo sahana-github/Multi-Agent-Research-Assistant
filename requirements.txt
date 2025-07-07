@@ -7,3 +7,6 @@ tiktoken
 pypdf
 streamlit
 requests
+openai-whisper
+pydub
+streamlit-audiorec

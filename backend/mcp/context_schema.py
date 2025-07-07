@@ -1,4 +1,4 @@
-def get_initial_context(user_input,modality="text"):
+def get_initial_context(user_input, modality="text"):
     return {
         "version": "1.0",
         "context": {

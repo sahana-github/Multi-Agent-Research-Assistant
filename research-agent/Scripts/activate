@@ -1,70 +1,76 @@
-# This file must be used with "source bin/activate" *from bash*
-# You cannot run it directly
+import streamlit as st
+import requests
+import whisper
+import tempfile
+import streamlit_audiorec as st_audiorec
 
-deactivate () {
-    # reset old environment variables
-    if [ -n "${_OLD_VIRTUAL_PATH:-}" ] ; then
-        PATH="${_OLD_VIRTUAL_PATH:-}"
-        export PATH
-        unset _OLD_VIRTUAL_PATH
-    fi
-    if [ -n "${_OLD_VIRTUAL_PYTHONHOME:-}" ] ; then
-        PYTHONHOME="${_OLD_VIRTUAL_PYTHONHOME:-}"
-        export PYTHONHOME
-        unset _OLD_VIRTUAL_PYTHONHOME
-    fi
+# Whisper model (lightweight)
+model = whisper.load_model("tiny")
 
-    # Call hash to forget past commands. Without forgetting
-    # past commands the $PATH changes we made may not be respected
-    hash -r 2> /dev/null
+# UI setup
+st.set_page_config(page_title="Research Assistant", page_icon="🎙️")
+st.title("🤖 Multi-Agent Research Assistant")
+st.subheader("Ask via Text or Voice and get latest research papers + AI summary")
 
-    if [ -n "${_OLD_VIRTUAL_PS1:-}" ] ; then
-        PS1="${_OLD_VIRTUAL_PS1:-}"
-        export PS1
-        unset _OLD_VIRTUAL_PS1
-    fi
+# Input type: text or voice
+input_mode = st.radio("Select input type:", ["Text", "Voice"])
+user_input = None
 
-    unset VIRTUAL_ENV
-    unset VIRTUAL_ENV_PROMPT
-    if [ ! "${1:-}" = "nondestructive" ] ; then
-    # Self destruct!
-        unset -f deactivate
-    fi
-}
+if input_mode == "Text":
+    user_input = st.text_input("Enter your research question:")
+else:
+    st.info("🎙️ Click to record your voice:")
+    wav_audio_data = st_audiorec()
 
-# unset irrelevant variables
-deactivate nondestructive
+    if wav_audio_data is not None:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+            f.write(wav_audio_data)
+            temp_path = f.name
 
-# on Windows, a path can contain colons and backslashes and has to be converted:
-if [ "${OSTYPE:-}" = "cygwin" ] || [ "${OSTYPE:-}" = "msys" ] ; then
-    # transform D:\path\to\venv to /d/path/to/venv on MSYS
-    # and to /cygdrive/d/path/to/venv on Cygwin
-    export VIRTUAL_ENV=$(cygpath "C:\Users\sahan\Multi-Agent-Research-Assistant\research-agent")
-else
-    # use the path as-is
-    export VIRTUAL_ENV="C:\Users\sahan\Multi-Agent-Research-Assistant\research-agent"
-fi
+        result = model.transcribe(temp_path)
+        user_input = result["text"]
+        st.success(f"📝 Transcribed: {user_input}")
 
-_OLD_VIRTUAL_PATH="$PATH"
-PATH="$VIRTUAL_ENV/Scripts:$PATH"
-export PATH
+# When user submits
+if st.button("🔍 Search & Summarize") and user_input:
+    with st.spinner("Thinking..."):
+        try:
+            response = requests.post(
+                "http://localhost:8000/ask",
+                json={"user_input": user_input, "modality": input_mode.lower()}
+            )
 
-# unset PYTHONHOME if set
-# this will fail if PYTHONHOME is set to the empty string (which is bad anyway)
-# could use `if (set -u; : $PYTHONHOME) ;` in bash
-if [ -n "${PYTHONHOME:-}" ] ; then
-    _OLD_VIRTUAL_PYTHONHOME="${PYTHONHOME:-}"
-    unset PYTHONHOME
-fi
+            if response.status_code == 200:
+                data = response.json()
+                summary = data.get("summary", "")
+                search_results = data.get("search_results", [])
 
-if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT:-}" ] ; then
-    _OLD_VIRTUAL_PS1="${PS1:-}"
-    PS1="(research-agent) ${PS1:-}"
-    export PS1
-    VIRTUAL_ENV_PROMPT="(research-agent) "
-    export VIRTUAL_ENV_PROMPT
-fi
+                st.success("✅ Done!")
 
-# Call hash to forget past commands. Without forgetting
-# past commands the $PATH changes we made may not be respected
-hash -r 2> /dev/null
+                st.subheader("🧠 Summary")
+                if summary:
+                    st.write(summary)
+                else:
+                    st.warning("No summary generated.")
+
+                st.subheader("📄 Top Papers")
+                if search_results:
+                    for i, paper in enumerate(search_results[:3]):
+                        title = paper.get("title", f"Paper {i+1}")
+                        paper_summary = paper.get("summary", "No summary available.")
+                        link = paper.get("link", "")
+
+                        st.markdown(f"**{i+1}. {title}**")
+                        st.write(paper_summary)
+                        if link:
+                            st.markdown(f"[🔗 Link to paper]({link})")
+                        else:
+                            st.markdown("🔗 No link available.")
+                        st.markdown("---")
+                else:
+                    st.warning("No papers found.")
+            else:
+                st.error(f"Error: {response.status_code} - {response.text}")
+
+        except Exception as e:
+            st.error(f"Request failed: {e}")
