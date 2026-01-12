@@ -1,0 +1,3 @@
+Large Language Models (LLMs) like GPT-4 have shown significant improvements in reasoning, summarization, and generation tasks. Retrieval-Augmented Generation (RAG) is a technique that combines these models with external knowledge to improve accuracy and reduce hallucinations. In this paper, we explore how lightweight vector databases like Chroma can be integrated with local models to build efficient multimodal research assistants.
+
+We also highlight the effectiveness of embedding models such as nomic-embed-text for creating dense representations that can be retrieved efficiently with cosine similarity.
