@@ -1,0 +1,21 @@
+# Environment
+venv/
+multiagent/
+.env
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Reports
+*.md
+research_report_*
+
+# Logs
+*.log
